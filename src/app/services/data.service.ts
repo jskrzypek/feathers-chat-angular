@@ -11,31 +11,58 @@ export class DataService {
   constructor(private feathers: Feathers) {
   }
 
-  messages$() {
+  messages$(query = {}) {
     // just returning the observable will query the backend on every subscription
     // using some caching mechanism would be wise in more complex applications
     return this.feathers
       .service('messages')
       .watch()
       .find({
-        query: {
+        query: Object.assign({}, query, {
           $sort: {createdAt: -1},
           $limit: 25
-        }
+        })
       });
   }
 
-  users$() {
+  users$(query = {}) {
     // just returning the observable will query the backend on every subscription
     // using some caching mechanism would be wise in more complex applications
     return this.feathers
       .service('users')
       .watch()
-      .find();
+      .find(query);
+  }
+  user$(id: string | number, params?: any) {
+    // just returning the observable will query the backend on every subscription
+    // using some caching mechanism would be wise in more complex applications
+    return this.feathers
+      .service('users')
+      .watch()
+      .get(id);
   }
 
-  sendMessage(message: string) {
-    if (message === '') {
+
+  chats$(params?: any) {
+    // just returning the observable will query the backend on every subscription
+    // using some caching mechanism would be wise in more complex applications
+    return this.feathers
+      .service('chats')
+      .watch()
+      .find(params && params.query);
+  }
+
+  chat$(id: string | number, params?: any) {
+    // just returning the observable will query the backend on every subscription
+    // using some caching mechanism would be wise in more complex applications
+    return this.feathers
+      .service('chats')
+      .watch()
+      .get(id);
+  }
+
+  sendMessage(text: string, chatId: string | number) {
+    if (text === '') {
       return;
     }
 
@@ -43,8 +70,11 @@ export class DataService {
     // so we don't need to subscribe to make create() happen.
     this.feathers
       .service('messages')
-      .create({
-        text: message
-      });
+      .create({ chatId, text });
+  }
+  joinChat(chat) {
+    this.feathers
+      .service('chats')
+      .patch(chat._id, chat);
   }
 }
